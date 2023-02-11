@@ -13,7 +13,7 @@ cur = None
 conn = None
 app = FastAPI()
 origins = [
-    "http://localhost:3000"
+    "http://localhost:3000", "https://market-gui.vercel.app", "market-1a194uks2-rakshith-u-r.vercel.app"
 ]
 
 app.add_middleware(
@@ -31,7 +31,7 @@ async def startup():
     global conn
     up.uses_netloc.append("postgres")
     url = up.urlparse(
-        "postgres://xdsiuqpt:6_NHPCLGza6RVpcRG_iJoYSg6Emyo3_t@trumpet.db.elephantsql.com/xdsiuqpt")
+        "postgres://xfelfohc:F-fp4eg_sXBTG8evRgiYoIyABFX8y1UY@tiny.db.elephantsql.com/xfelfohc")
     conn = psycopg2.connect(database=url.path[1:], user=url.username,
                             password=url.password,
                             host=url.hostname,
@@ -115,29 +115,48 @@ def hotness_calc(data):
 
 @app.get("/all")
 def hotness():
-    table_name = os.environ.get('METRIC')
+    # table_name = os.environ.get('METRIC')
+    up.uses_netloc.append("postgres")
+    url = up.urlparse(
+        "postgres://xfelfohc:F-fp4eg_sXBTG8evRgiYoIyABFX8y1UY@tiny.db.elephantsql.com/xfelfohc")
+    conn = psycopg2.connect(database=url.path[1:], user=url.username,
+                            password=url.password,
+                            host=url.hostname,
+                            port=url.port
+                            )
+    cur = conn.cursor()
     try:
         cur.execute(
-            f"SELECT market_id,sold_homes_count,new_listings_count,homes_sold_over_list_price_count,median_sale_to_list_ratio,days_to_sell FROM {table_name}")
+            f'SELECT * FROM market_hotness')
         rows = cur.fetchall()
-        data = hotness_calc(rows)
-        return data
+        result = dict(rows)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get('/market')
 def get_score(market_id: int):
-    table_name = os.environ.get('METRIC')
+    # table_name = os.environ.get('METRIC')
+    up.uses_netloc.append("postgres")
+    url = up.urlparse(
+        "postgres://xfelfohc:F-fp4eg_sXBTG8evRgiYoIyABFX8y1UY@tiny.db.elephantsql.com/xfelfohc")
+    conn = psycopg2.connect(database=url.path[1:], user=url.username,
+                            password=url.password,
+                            host=url.hostname,
+                            port=url.port
+                            )
+    cur = conn.cursor()
     try:
         cur.execute(
-            f"SELECT market_id,sold_homes_count,new_listings_count,homes_sold_over_list_price_count,median_sale_to_list_ratio,days_to_sell FROM {table_name} WHERE market_id = {market_id}")
+            f'SELECT "market_hotness" from market_hotness where market_id = {market_id}')
         rows = cur.fetchall()
 
         if len(rows) == 0:
             print(len(rows))
             raise HTTPException(status=404, details="Market not found")
-        data = score_calc(rows)
-        return data
+        return {
+            "market_id": rows[0][0]
+        }
     except Exception as e:
         return JSONResponse(status_code=404)
