@@ -7,8 +7,16 @@
     ],
     "routes": [
         {
-            "src": "/(.*)",
-            "dest": "/main.py"
+            "src": "/",
+            "dest": "/"
+        },
+        {
+            "src": "/all",
+            "dest": "/"
+        },
+        {
+            "src": "/ping",
+            "dest": "/"
         }
     ]
 }

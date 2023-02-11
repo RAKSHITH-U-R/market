@@ -51,6 +51,9 @@ async def shutdown():
 def read_root():
     return {"Hello": "World"}
 
+@app.get("/ping")
+def ping():
+    return {"Ping": "Pong"}
 
 def data_processing(data, head):
     data = pd.DataFrame.from_records(data)
