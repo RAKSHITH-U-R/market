@@ -1,15 +1,14 @@
 {
-    "version": 2,
     "builds": [
         {
-            "src": "*.py",
-            "use": "@vercel/python"
+            "src": "/main.py",
+            "use": "@now/python"
         }
     ],
     "routes": [
         {
             "src": "/(.*)",
-            "dest": "uvicorn main:app --port $PORT"
+            "dest": "/main.py"
         }
     ]
 }
