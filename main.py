@@ -126,7 +126,7 @@ def hotness():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get('/market/')
+@app.get('/market')
 def get_score(market_id: int):
     table_name = os.environ.get('METRIC')
     try:
