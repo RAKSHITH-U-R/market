@@ -188,3 +188,50 @@ def get_top5():
     except Exception as e:
         conn.close()
         return JSONResponse(status_code=404)
+
+
+def history_calc(data):
+    head = ["market_id", "time_bucket", "new_listings_count", "sold_homes_count", "homes_sold_over_list_price_count", "median_list_price_psqft", "median_sale_price_psqft", "median_sale_price", "median_sale_to_list_ratio", "days_to_pending", "days_to_sell"]
+    data = data_processing(data, head)
+
+    hot_list = []
+    for row in data.index:
+
+        sold_homes_count = data['sold_homes_count'][row]
+        new_listings_count = data['new_listings_count'][row]
+        homes_sold_over_list_price_count = data['homes_sold_over_list_price_count'][row]
+        days_to_sell = data['days_to_sell'][row]
+
+        if new_listings_count != 0 and sold_homes_count != 0 and homes_sold_over_list_price_count != 0 and days_to_sell != 0:
+
+            hotness_score = (sold_homes_count / new_listings_count) * (homes_sold_over_list_price_count /
+                                                                       sold_homes_count) * (1 / days_to_sell)*1000000
+            hot_list.append([data["time_bucket"][row],hotness_score])
+    
+    return sorted(hot_list)
+
+
+@app.get('/history')
+def get_history(market_id: int):
+    up.uses_netloc.append("postgres")
+    url = up.urlparse(
+        "postgres://xfelfohc:F-fp4eg_sXBTG8evRgiYoIyABFX8y1UY@tiny.db.elephantsql.com/xfelfohc")
+    conn = psycopg2.connect(database=url.path[1:], user=url.username,
+                            password=url.password,
+                            host=url.hostname,
+                            port=url.port
+                            )
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            f'SELECT * from market_metrics where market_id = {market_id}')
+        rows = cur.fetchall()
+
+        if len(rows) == 0:
+            conn.close()
+            raise HTTPException(status=404, details="Market not found")
+        conn.close()
+        return dict(history_calc(rows))
+    except Exception as e:
+        conn.close()
+        return JSONResponse(status_code=404)
